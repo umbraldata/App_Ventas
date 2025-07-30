@@ -1,0 +1,163 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+<h2 class="mb-4">Nueva Venta</h2>
+
+<!-- ✅ Bloque del mensaje agregado justo después del título -->
+{% if mostrar_mensaje %}
+  <div id="mensaje-exito" style="position: fixed; top: 20px; right: 20px; background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0,0,0,0.2); z-index: 1000;">
+    ¡Gracias por tu compra!
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const mensaje = document.getElementById("mensaje-exito");
+      if (mensaje) {
+        setTimeout(() => {
+          mensaje.remove();
+        }, 5000);
+      }
+    });
+  </script>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Escáner QR -->
+        <h4>Escanear Producto</h4>
+        <div id="reader" style="width: 300px; margin-bottom: 20px;"></div>
+        <div id="result" class="mb-3 text-success"></div>
+
+        <!-- Tabla de productos seleccionados -->
+        <h5>Productos Seleccionados</h5>
+        <table class="table table-bordered" id="tablaProductos">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                    <th>Eliminar</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <p><strong>Total:</strong> $<span id="totalVenta">0</span></p>
+
+        <!-- Formulario -->
+        <form method="POST" action="{{ url_for('nueva_venta') }}" onsubmit="return enviarVenta()">
+            <input type="hidden" name="productos_seleccionados" id="productos_seleccionados">
+
+            <div class="mb-3">
+                <label class="form-label">Método de Pago</label>
+                <select class="form-select" name="metodo_pago" id="metodo_pago" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Débito">Débito</option>
+                    <option value="Crédito">Crédito</option>
+                </select>
+            </div>
+
+            <div class="mb-3" id="efectivo_div" style="display:none;">
+                <label class="form-label">Efectivo Entregado</label>
+                <input type="number" class="form-control" id="efectivo_entregado" name="efectivo_entregado" min="0">
+                <p class="mt-2"><strong>Vuelto:</strong> $<span id="vuelto">0</span></p>
+            </div>
+
+
+            <button type="submit" class="btn btn-success">Registrar Venta</button>
+            <button type="button" class="btn btn-secondary" onclick="limpiarVenta()">Limpiar</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+    const productos_info = {{ productos_json|safe }};
+    let productos_seleccionados = [];
+
+    function onScanSuccess(decodedText) {
+        const producto = productos_info.find(p => p.codigo_barras === decodedText);
+        if (producto) {
+            const existente = productos_seleccionados.find(p => p.id === producto.id);
+            if (existente) {
+                if (existente.cantidad < 10) {
+                    existente.cantidad += 1;
+                }
+            } else if (productos_seleccionados.length < 10) {
+                productos_seleccionados.push({ id: producto.id, nombre: producto.nombre, precio: producto.precio, cantidad: 1 });
+            }
+            actualizarTabla();
+            document.getElementById('result').innerHTML = "<strong>Producto agregado:</strong> " + producto.nombre;
+        } else {
+            alert("Producto no encontrado");
+        }
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+
+    function actualizarTabla() {
+        const tbody = document.querySelector("#tablaProductos tbody");
+        tbody.innerHTML = "";
+        let total = 0;
+        productos_seleccionados.forEach((prod, index) => {
+            const subtotal = prod.precio * prod.cantidad;
+            total += subtotal;
+            const row = `
+                <tr>
+                    <td>${prod.nombre}</td>
+                    <td>$${prod.precio}</td>
+                    <td><input type="number" min="1" max="10" value="${prod.cantidad}" onchange="cambiarCantidad(${index}, this.value)"></td>
+                    <td>$${subtotal}</td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarProducto(${index})">X</button></td>
+                </tr>`;
+            tbody.innerHTML += row;
+        });
+        document.getElementById("totalVenta").innerText = total;
+        calcularVuelto();
+    }
+
+    function cambiarCantidad(index, nuevaCantidad) {
+        productos_seleccionados[index].cantidad = parseInt(nuevaCantidad);
+        actualizarTabla();
+    }
+
+    function eliminarProducto(index) {
+        productos_seleccionados.splice(index, 1);
+        actualizarTabla();
+    }
+
+    function limpiarVenta() {
+        productos_seleccionados = [];
+        actualizarTabla();
+        document.getElementById("efectivo_entregado").value = "";
+        document.getElementById("vuelto").innerText = "0";
+    }
+
+    function calcularVuelto() {
+        const total = productos_seleccionados.reduce((s, p) => s + p.precio * p.cantidad, 0);
+        const efectivo = parseInt(document.getElementById("efectivo_entregado").value) || 0;
+        const vuelto = efectivo - total;
+        document.getElementById("vuelto").innerText = vuelto >= 0 ? vuelto : 0;
+    }
+
+    document.getElementById("metodo_pago").addEventListener("change", function () {
+        const metodo = this.value;
+        document.getElementById("efectivo_div").style.display = metodo === "Efectivo" ? "block" : "none";
+        document.getElementById("cliente_div").style.display = metodo === "Fiado" ? "block" : "none";
+    });
+
+    document.getElementById("efectivo_entregado").addEventListener("input", calcularVuelto);
+
+    function enviarVenta() {
+        if (productos_seleccionados.length === 0) {
+            alert("Debes agregar al menos un producto");
+            return false;
+        }
+        document.getElementById("productos_seleccionados").value = JSON.stringify(productos_seleccionados);
+        return true;
+    }
+</script>
+
+{% endblock %}

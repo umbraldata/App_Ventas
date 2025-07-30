@@ -1,0 +1,162 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    padding: 10;
+    background: linear-gradient(130deg, #00ccff, #1d2d88 );
+}
+
+.container {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+
+.back-arrow {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 40px; /* Tamaño más grande */
+    color: white;
+    text-decoration: none;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.back-arrow:hover {
+    transform: scale(1.3); /* Aumenta el tamaño al pasar el mouse */
+    color: #09e2ff; /* Cambia a amarillo dorado */
+}
+
+.container .tittle{
+    font-size: 25px;
+    font-weight: 500;
+}
+
+.container form{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 10px 12px 0;
+}
+
+form .form-group{
+    margin-bottom: 15px;
+    width: calc(100%/2 - 20px);
+
+}
+
+form span{
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input{
+    height: 40px;
+    width: 100%;
+    outline: none;
+    border-radius: 5px;
+    border: 1px solid;
+    padding-left: 15px;
+    border-bottom-width: 2px;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group input:valid{
+    border-color: skyblue;
+
+}
+
+form .button{
+    width: 100%;
+    height: 40px;
+    margin: 40px 0;
+}
+
+form .button input{
+    width: 100%;
+    height: 100%;
+    outline: none;
+    cursor: pointer;
+    background: linear-gradient(130deg, #00ccff, #1d2d88 );
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    border: none;
+    border-radius: 5px;
+}
+
+form .button input:hover{
+    background: linear-gradient(130deg, #00ccff, #1d2d88 );
+}
+
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.video-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+.overlay {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.was-validates small{
+    display: block;
+    color: red;
+}
+
+small{
+    display: none;
+}
+@media (max-width: 480px) {
+    .card {
+        width: 95% !important;
+        padding: 20px 15px;
+    }
+
+    .video-bg {
+        filter: brightness(0.7); /* mejora la legibilidad */
+    }
+
+    .input-group-text {
+        font-size: 14px;
+    }
+
+    .form-control {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    h3, h4 {
+        font-size: 20px;
+    }
+
+    .btn {
+        font-size: 14px;
+    }
+}
+

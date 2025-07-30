@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogo de Producto</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+
+        .sidebar {
+            background-color: #ffffff;
+            padding: 20px;
+            border-right: 1px solid #dee2e6;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+
+        .hover-bg:hover {
+            background-color: #f1f1f1;
+            color: #0d6efd;
+            font-weight: 500;
+            transition: 0.2s ease;
+        }
+
+        .product-card {
+            transition: transform 0.2s ease-in-out;
+            border: none;
+        }
+
+        .product-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-img {
+            max-height: 250px;
+            object-fit: cover;
+        }
+
+        .card-footer {
+            background-color: #f8f9fa;
+        }
+
+        .filter-title {
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                height: 100%;
+                width: 75%;
+                max-width: 300px;
+                z-index: 1050;
+                background: white;
+                transition: left 0.3s ease-in-out;
+                overflow-y: auto;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 100%;
+                background: rgba(0,0,0,0.3);
+                z-index: 1040;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .hamburger-btn {
+                display: inline-block;
+                margin-bottom: 15px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .sidebar-overlay,
+            .hamburger-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar overlay (solo móvil) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+        <!-- Menú lateral -->
+        <div class="col-md-2 sidebar" id="sidebar">
+            <a href="{{ url_for('admin_index') if current_user.rol == 'administrador' else url_for('ventas') }}" class="btn btn-outline-secondary w-100 mb-3">
+                <i class="bi bi-arrow-left-circle"></i> Volver
+            </a>
+
+            <div class="filter-title">Filtrar por Género</div>
+            <div class="form-check">
+                <input class="form-check-input filtro-genero" type="checkbox" value="Hombre" id="generoHombre">
+                <label class="form-check-label" for="generoHombre">Hombre</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input filtro-genero" type="checkbox" value="Mujer" id="generoMujer">
+                <label class="form-check-label" for="generoMujer">Mujer</label>
+            </div>
+
+            <div class="filter-title mt-4">Filtrar por Tipo</div>
+            {% set tipos = ['Polerón', 'Chaqueta', 'Polera', 'Camisa', 'Pantalón', 'Blusa', 'Shorts', 'Buzos'] %}
+            {% for tipo in tipos %}
+            <div class="form-check">
+                <input class="form-check-input filtro-tipo" type="checkbox" value="{{ tipo }}" id="tipo{{ loop.index }}">
+                <label class="form-check-label" for="tipo{{ loop.index }}">{{ tipo }}</label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Catálogo principal -->
+        <div class="col-md-10 p-4">
+            <!-- Botón hamburguesa -->
+            <button class="btn btn-outline-primary hamburger-btn" onclick="toggleSidebar()">
+                <i class="bi bi-filter-left"></i> Filtros
+            </button>
+
+            <h2 class="mb-4">Catálogo de Productos</h2>
+
+            <div class="row" id="productos-container">
+                {% for producto in productos %}
+                <div class="col-sm-6 col-md-4 mb-4 producto-card" 
+                     data-genero="{{ producto.genero }}" 
+                     data-tipo="{{ producto.tipo_producto }}">
+                    <div class="card product-card h-100">
+                        <img src="{{ url_for('static', filename='uploads/' + producto.imagen_local) if producto.imagen_local else url_for('static', filename='default.jpg') }}"
+                             class="card-img-top product-img"
+                             alt="{{ producto.nombre }}"
+                             onerror="this.src='{{ url_for('static', filename='default.jpg') }}';">
+
+                        {% if current_user.rol == 'administrador' %}
+                        <div class="position-absolute top-0 end-0 p-2">
+                            <a href="{{ url_for('editar_producto', id=producto.id) }}" class="btn btn-sm btn-warning me-1" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('eliminar_producto', id=producto.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar producto?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+
+                        <div class="card-body">
+                            <h5 class="card-title">{{ producto.nombre }}</h5>
+                            <p class="card-text"><strong>Precio:</strong> ${{ producto.precio }}</p>
+                            <p class="card-text"><strong>Stock:</strong> {{ producto.stock }}</p>
+                            <p class="card-text"><strong>Género:</strong> {{ producto.genero }}</p>
+                            <p class="card-text"><strong>Tipo:</strong> {{ producto.tipo_producto }}</p>
+                        </div>
+                        <div class="card-footer text-center">
+                            <a href="{{ url_for('ver_detalles', id=producto.id) }}" class="btn btn-outline-primary btn-sm">Ver Detalles</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("sidebarOverlay").classList.toggle("active");
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const generoChecks = document.querySelectorAll('.filtro-genero');
+        const tipoChecks = document.querySelectorAll('.filtro-tipo');
+        const productos = document.querySelectorAll('.producto-card');
+
+        function filtrarProductos() {
+            const generosSeleccionados = Array.from(generoChecks)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            const tiposSeleccionados = Array.from(tipoChecks)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            productos.forEach(prod => {
+                const genero = prod.getAttribute('data-genero');
+                const tipo = prod.getAttribute('data-tipo');
+
+                const coincideGenero = generosSeleccionados.length === 0 || generosSeleccionados.includes(genero);
+                const coincideTipo = tiposSeleccionados.length === 0 || tiposSeleccionados.includes(tipo);
+
+                prod.style.display = (coincideGenero && coincideTipo) ? 'block' : 'none';
+            });
+        }
+
+        generoChecks.forEach(cb => cb.addEventListener('change', filtrarProductos));
+        tipoChecks.forEach(cb => cb.addEventListener('change', filtrarProductos));
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+# Entornos virtuales
+.venv/
+env/
+ENV/
+
+# Archivos de base de datos local
+*.db
+*.sqlite3
+
+# Compilados de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Carpetas de build/ejecutables
+build/
+dist/
+*.spec
+
+# Archivos temporales o IDEs
+*.log
+*.tmp
+*.swp
+.DS_Store
+.vscode/
+
+# Migrations (si prefieres regenerarlas en producción)
+migrations/

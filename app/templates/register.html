@@ -64,17 +64,17 @@
 
                 <div class="mb-3 input-group">
                     <span class="input-group-text"><i class="bi bi-person-badge-fill"></i></span>
-                    <select name="rol" class="form-select" id="rol" onchange="mostrarClaveAdmin()" required>
+                    <select name="rol" class="form-select" required>
                         <option value="">Seleccionar rol</option>
                         <option value="administrador">Administrador</option>
                         <option value="vendedor">Vendedor</option>
                     </select>
                 </div>
 
-                <!-- Clave secreta solo si se elige "administrador" -->
-                <div class="mb-3 input-group" id="clave-admin" style="display:none;">
-                    <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
-                    <input type="password" name="clave_admin" id="clave_admin" class="form-control" placeholder="Clave secreta para administrador">
+                <!-- Campo de clave secreta para el rol -->
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-shield-lock-fill"></i></span>
+                    <input type="password" name="clave_rol" class="form-control" placeholder="Clave para este rol" required>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100">Registrarse</button>
@@ -85,28 +85,16 @@
     <!-- Toast Container -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
         <div id="toastMensaje" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
-          <div class="d-flex">
-            <div class="toast-body" id="mensajeToast">
-              ¡Usuario registrado correctamente!
+            <div class="d-flex">
+                <div class="toast-body" id="mensajeToast">
+                    ¡Usuario registrado correctamente!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-          </div>
         </div>
     </div>
 
     <script>
-        function mostrarClaveAdmin() {
-            const rol = document.getElementById('rol').value;
-            const claveDiv = document.getElementById('clave-admin');
-            if (rol === 'administrador') {
-                claveDiv.style.display = 'flex';
-                document.getElementById('clave_admin').required = true;
-            } else {
-                claveDiv.style.display = 'none';
-                document.getElementById('clave_admin').required = false;
-            }
-        }
-
         function validarFormulario() {
             const pass = document.getElementById("password").value;
             const confirm = document.getElementById("confirm-password").value;
@@ -116,10 +104,8 @@
             }
             return true;
         }
-
-        window.onload = mostrarClaveAdmin;
     </script>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

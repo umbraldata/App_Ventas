@@ -65,6 +65,8 @@ def login():
 # ========================
 # REGISTRO
 # ========================
+from flask import current_app
+
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
@@ -75,9 +77,9 @@ def registro():
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm-password', '')
         rol = request.form.get('rol', '')
-        clave_admin = request.form.get('clave_admin', '')
+        clave_rol = request.form.get('clave_rol', '')
 
-        if not all([nombre, apellido, email, telefono, password, confirm_password, rol]):
+        if not all([nombre, apellido, email, telefono, password, confirm_password, rol, clave_rol]):
             flash("Todos los campos son obligatorios.", "danger")
             return redirect(url_for('registro'))
 
@@ -85,16 +87,18 @@ def registro():
             flash("Las contraseñas no coinciden.", "danger")
             return redirect(url_for('registro'))
 
+        # Verificar clave del rol
+        if rol == 'administrador' and clave_rol != current_app.config['CLAVE_ADMIN']:
+            flash("Clave incorrecta para registrar un administrador.", "danger")
+            return redirect(url_for('registro'))
+
+        if rol == 'vendedor' and clave_rol != current_app.config['CLAVE_VENDEDOR']:
+            flash("Clave incorrecta para registrar un vendedor.", "danger")
+            return redirect(url_for('registro'))
+
         if User.query.filter_by(email=email).first():
             flash("El correo ya está registrado.", "warning")
             return redirect(url_for('registro'))
-
-        # 🔒 Verificar clave secreta si el rol es administrador
-        if rol == 'administrador':
-            clave_admin = request.form.get('clave_admin', '')
-            if clave_admin != app.config['CLAVE_ADMIN']:
-                flash("Clave secreta inválida para administrador.", "danger")
-                return redirect(url_for('registro'))
 
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 

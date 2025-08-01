@@ -120,7 +120,7 @@ def ventas():
 @app.route('/nueva_venta', methods=['GET', 'POST'])
 @login_required
 def nueva_venta():
-    if current_user.rol != 'vendedor':
+    if current_user.rol not in ['vendedor', 'administrador']:
         flash("Acceso no autorizado.", "danger")
         return redirect(url_for('login'))
 
@@ -163,10 +163,8 @@ def nueva_venta():
         db.session.commit()
         flash(f"¡Venta registrada exitosamente! Total: ${total}", "success")
 
-        # ✅ Redirecciona con el parámetro que activa el mensaje JS
         return redirect(url_for("nueva_venta", mostrar_mensaje="1"))
 
-    # ✅ Este valor activa el bloque <script> en el HTML
     mostrar_mensaje = request.args.get("mostrar_mensaje") == "1"
 
     productos_json = json.dumps([{

@@ -18,6 +18,11 @@ from app import db
 import os
 from app.models import Producto
 from werkzeug.utils import secure_filename
+from app.cloudinary_utils import upload_image, delete_image
+import cloudinary
+import cloudinary.uploader
+
+
 
 UPLOAD_FOLDER = os.path.join('app', 'static', 'uploads')
 
@@ -214,16 +219,13 @@ def nueva_venta():
 
 
 
-
 # ========================
-# AGREGAR PRODUCTO
+# AGREGAR PRODUCTO (Cloudinary)
 # ========================
-
 @app.route('/agregar_producto', methods=['GET', 'POST'])
 @login_required
 def agregar_producto():
     if request.method == 'POST':
-        # 1️⃣ Recoger datos desde el formulario
         nombre = request.form['nombre']
         descripcion = request.form['descripcion']
         caracteristicas = request.form['caracteristicas']
@@ -234,23 +236,24 @@ def agregar_producto():
         marca = request.form['marca']
         genero = request.form['genero']
 
-        # 2️⃣ Manejo de imagen subida
-        imagen = request.files.get('imagen')
         imagen_local = None
-        if imagen and imagen.filename != '':
-            filename = secure_filename(imagen.filename)
-            ruta_imagen = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            imagen.save(ruta_imagen)
-            imagen_local = filename  # Solo el nombre del archivo
 
-        # 3️⃣ Contar productos existentes con la misma combinación para generar código secuencial
+        # 📌 Subida de imagen a Cloudinary
+        imagen = request.files.get('imagen')
+        if imagen and imagen.filename != '':
+            upload_result = cloudinary.uploader.upload(
+                imagen,
+                folder="productos",  # Carpeta en Cloudinary
+                resource_type="image"
+            )
+            imagen_local = upload_result['public_id']  # Guardamos el public_id
+
         existing_count = Producto.query.filter_by(
             genero=genero,
             tipo_producto=tipo_producto,
             talla=talla
         ).count()
 
-        # 4️⃣ Crear el nuevo producto
         nuevo_producto = Producto(
             nombre=nombre,
             descripcion=descripcion,
@@ -264,18 +267,14 @@ def agregar_producto():
             imagen_local=imagen_local
         )
 
-        # 5️⃣ Generar código de barras
         nuevo_producto.codigo_barras = generar_codigo_barras(nuevo_producto, existing_count)
-
-        # 6️⃣ Guardar en la base de datos
         db.session.add(nuevo_producto)
         db.session.commit()
 
-        # 7️⃣ Generar código QR
         generar_qr(nuevo_producto.codigo_barras)
 
-        flash("Producto agregado correctamente con código de barras y QR.", "success")
-        return redirect(url_for('productos'))  # Cambia esto si tienes otra vista de listado
+        flash("Producto agregado correctamente con código de barras, QR y foto optimizada.", "success")
+        return redirect(url_for('productos'))
 
     return render_template('agregar_producto.html')
 
@@ -307,16 +306,14 @@ def eliminar_producto(id):
     return redirect(url_for('productos'))
 
 # ========================
-# EDITAR PRODUCTO
+# EDITAR PRODUCTO (Cloudinary)
 # ========================
-
 @app.route('/editar_producto/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_producto(id):
     producto = Producto.query.get_or_404(id)
 
     if request.method == 'POST':
-        # ✅ Actualizar campos del formulario
         producto.nombre = request.form['nombre']
         producto.descripcion = request.form['descripcion']
         producto.caracteristicas = request.form['caracteristicas']
@@ -327,20 +324,21 @@ def editar_producto(id):
         producto.marca = request.form['marca']
         producto.genero = request.form['genero']
 
-        # ✅ Manejo de imagen nueva (si se sube)
+        # 📌 Subida de nueva imagen a Cloudinary si se sube
         imagen = request.files.get('imagen')
         if imagen and imagen.filename != '':
-            filename = secure_filename(imagen.filename)
-            ruta_imagen = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            imagen.save(ruta_imagen)
-            producto.imagen_local = filename  # solo el nombre del archivo
+            upload_result = cloudinary.uploader.upload(
+                imagen,
+                folder="productos",
+                resource_type="image"
+            )
+            producto.imagen_local = upload_result['public_id']
 
         db.session.commit()
-        flash('Producto actualizado correctamente.', 'success')
+        flash('Producto actualizado correctamente con imagen optimizada.', 'success')
         return redirect(url_for('productos'))
 
     return render_template('editar_producto.html', producto=producto)
-
 
 
 # ========================

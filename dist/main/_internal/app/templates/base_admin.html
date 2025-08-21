@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+
+    <!-- Manifest de PWA -->
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#0d6efd">
+
+<!-- Íconos de app -->
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-512.png') }}">
+
+    <meta charset="UTF-8">
+    <title>{{ title or 'Administrador' }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body { overflow-x: hidden; }
+
+        .sidebar {
+            height: 100vh;
+            background-color: #212529;
+            color: white;
+            padding-top: 20px;
+        }
+
+        .sidebar a { color: white; text-decoration: none; }
+        .sidebar a.active, .sidebar a:hover { background-color: #0d6efd; color: white; }
+        .sidebar .nav-link { padding: 12px 20px; }
+
+        /* MOBILE ADAPTATION */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 70%;
+                z-index: 1050;
+                transition: left 0.3s ease-in-out;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            .col-md-10 {
+                width: 100% !important;
+            }
+
+            #toggleSidebar {
+                z-index: 1060;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Botón de menú (solo en mobile) -->
+    <button class="btn btn-dark d-md-none position-fixed top-0 start-0 m-2" id="toggleSidebar">
+        <i class="bi bi-list" style="font-size: 1.5rem;"></i>
+    </button>
+
+    <div class="row g-0">
+        <!-- Sidebar -->
+        <div class="col-md-2 sidebar d-flex flex-column justify-content-between" id="sidebar">
+            <div>
+                <h4 class="text-center mb-4"><i class="bi bi-shop"></i> Admin</h4>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('admin_index') %}active{% endif %}" href="{{ url_for('admin_index') }}">
+                            <i class="bi bi-people-fill me-2"></i>Usuarios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('productos') %}active{% endif %}" href="{{ url_for('productos') }}">
+                            <i class="bi bi-box-seam me-2"></i>Productos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('ventas') %}active{% endif %}" href="{{ url_for('ventas') }}">
+                            <i class="bi bi-cash-coin me-2"></i>Ventas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="collapse" href="#submenuReportes" role="button" aria-expanded="false" aria-controls="submenuReportes">
+                            <i class="bi bi-graph-up me-2"></i>Reportes
+                            <i class="bi bi-caret-down ms-auto"></i>
+                        </a>
+                        <div class="collapse ps-3" id="submenuReportes">
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for('historial_ventas') }}">
+                                        <i class="bi bi-clock-history me-2"></i>Historial de Ventas
+                                    </a>
+                                </li>
+                                <li class="nav-item mt-2">
+                                    <form method="get" action="{{ url_for('exportar_excel_mes') }}" class="d-flex align-items-center gap-2">
+                                        <input type="month" name="mes" required class="form-control form-control-sm" style="max-width: 150px;">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="bi bi-file-earmark-excel"></i>
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="text-center mb-3">
+                <div class="mb-2"><i class="bi bi-person-circle"></i> {{ current_user.nombre }}</div>
+                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light">Cerrar sesión</a>
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="col-md-10 p-4">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Bootstrap JS + Toggle Sidebar Script -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('toggleSidebar').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('show');
+        });
+    </script>
+</body>
+</html>

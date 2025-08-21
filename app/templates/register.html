@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+</head>
+<body>
+    <video autoplay muted loop class="video-bg">
+        <source src="{{ url_for('static', filename='video/video1.mp4') }}" type="video/mp4">
+    </video>
+
+    <div class="container mt-5">
+        <div class="card p-4 mx-auto" style="max-width: 420px;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Registro de Usuario</h4>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Volver</a>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <form id="form-validation" method="POST" action="{{ url_for('registro') }}" onsubmit="return validarFormulario();">
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                    <input type="text" name="nombre" class="form-control" placeholder="Nombre" required>
+                </div>
+
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-person-lines-fill"></i></span>
+                    <input type="text" name="apellido" class="form-control" placeholder="Apellido" required>
+                </div>
+
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+                    <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required>
+                </div>
+
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-phone-fill"></i></span>
+                    <input type="text" name="telefono" class="form-control" placeholder="Teléfono" required>
+                </div>
+
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Contraseña" required autocomplete="new-password">
+                </div>
+
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                    <input type="password" name="confirm-password" id="confirm-password" class="form-control" placeholder="Confirmar contraseña" required autocomplete="new-password">
+                </div>
+
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-person-badge-fill"></i></span>
+                    <select name="rol" id="rol" class="form-select" required>
+                        <option value="">Seleccionar rol</option>
+                        <option value="administrador">Administrador</option>
+                        <option value="vendedor">Vendedor</option>
+                    </select>
+                </div>
+
+                <!-- Clave de registro: se muestra solo para admin/vendedor -->
+                <div class="mb-3 input-group" id="clave-group" style="display:none;">
+                    <span class="input-group-text"><i class="bi bi-shield-lock-fill"></i></span>
+                    <input type="password" name="clave_registro" id="clave_registro" class="form-control" placeholder="Clave de registro para este rol">
+                </div>
+                <small id="clave-help" class="text-muted d-none">Pídele esta clave al administrador.</small>
+
+                <button type="submit" class="btn btn-primary w-100 mt-3">Registrarse</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="toastMensaje" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="d-flex">
+            <div class="toast-body" id="mensajeToast">
+              ¡Usuario registrado correctamente!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        </div>
+    </div>
+
+    <script>
+        function validarFormulario() {
+            const pass = document.getElementById("password").value;
+            const confirm = document.getElementById("confirm-password").value;
+            if (pass !== confirm) {
+                alert("Las contraseñas no coinciden.");
+                return false;
+            }
+
+            // Validar clave de registro si el rol lo requiere
+            const rol = document.getElementById("rol").value;
+            const claveInput = document.getElementById("clave_registro");
+            const requiereClave = (rol === 'administrador' || rol === 'vendedor');
+            if (requiereClave && (!claveInput.value || claveInput.value.trim() === '')) {
+                alert("Debes ingresar la clave de registro para el rol seleccionado.");
+                claveInput.focus();
+                return false;
+            }
+            return true;
+        }
+
+        // Mostrar/ocultar el campo de clave según el rol
+        document.addEventListener('DOMContentLoaded', function () {
+            const rolSelect = document.getElementById('rol');
+            const claveGroup = document.getElementById('clave-group');
+            const claveInput = document.getElementById('clave_registro');
+            const claveHelp  = document.getElementById('clave-help');
+
+            function actualizarClave() {
+                const v = rolSelect.value;
+                const mostrar = (v === 'administrador' || v === 'vendedor');
+                claveGroup.style.display = mostrar ? '' : 'none';
+                claveHelp.classList.toggle('d-none', !mostrar);
+                if (mostrar) {
+                    claveInput.required = true;
+                } else {
+                    claveInput.required = false;
+                    claveInput.value = '';
+                }
+            }
+
+            rolSelect.addEventListener('change', actualizarClave);
+            actualizarClave(); // init
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+<h2 class="mb-4">Editar Producto</h2>
+
+<!-- 🔙 Botón de retroceso -->
+<div class="mb-3">
+    <a href="{{ url_for('productos') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left-circle-fill"></i> Volver
+    </a>
+</div>
+
+<!-- 🧩 IMPORTANTE: enctype para subir archivos -->
+<form method="POST" action="{{ url_for('editar_producto', id=producto.id) }}" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label class="form-label">Código de Barras (no editable)</label>
+        <input type="text" class="form-control" value="{{ producto.codigo_barras }}" readonly>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Nombre del Producto</label>
+        <input type="text" class="form-control" name="nombre" value="{{ producto.nombre }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Descripción</label>
+        <textarea class="form-control" name="descripcion" rows="2" required>{{ producto.descripcion }}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Características</label>
+        <textarea class="form-control" name="caracteristicas" rows="2">{{ producto.caracteristicas }}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Precio</label>
+        <input type="number" step="0.01" min="0" class="form-control" name="precio" value="{{ producto.precio }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Stock</label>
+        <input type="number" min="0" class="form-control" name="stock" value="{{ producto.stock }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Talla</label>
+        <select class="form-select" name="talla" required>
+            {% for t in ['XS', 'S', 'M', 'L', 'XL', 'XXL'] %}
+                <option value="{{ t }}" {% if producto.talla == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tipo de Producto</label>
+        <select class="form-select" name="tipo_producto" required>
+            {% set tipos = ['Polerón', 'Chaqueta', 'Polera', 'Camisa', 'Pantalón', 'Blusa', 'Shorts', 'Buzos'] %}
+            {% for tipo in tipos %}
+                <option value="{{ tipo }}" {% if producto.tipo_producto == tipo %}selected{% endif %}>{{ tipo }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Marca</label>
+        <input type="text" class="form-control" name="marca" value="{{ producto.marca }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Género</label>
+        <select class="form-select" name="genero" required>
+            <option value="Hombre" {% if producto.genero == 'Hombre' %}selected{% endif %}>Hombre</option>
+            <option value="Mujer" {% if producto.genero == 'Mujer' %}selected{% endif %}>Mujer</option>
+        </select>
+    </div>
+
+    <!-- 🖼 Subir imagen -->
+    <div class="mb-3">
+        <label class="form-label">Imagen del Producto (opcional)</label>
+        <input id="input-imagen" type="file" class="form-control" name="imagen" accept="image/*">
+        <small class="form-text text-muted">Si subes una nueva imagen, reemplazará la actual.</small>
+        <div class="mt-2">
+            <img id="preview-imagen" src="" alt="" class="img-thumbnail d-none" style="max-height: 180px;">
+        </div>
+    </div>
+
+    <!-- Imagen actual (prioriza Base64, luego legacy, luego default) -->
+    <div class="mb-3">
+        <label class="form-label">Imagen Actual:</label><br>
+        <img
+          src="{{ producto.imagen_data_url
+                 or (producto.imagen_local and url_for('static', filename='uploads/' ~ producto.imagen_local))
+                 or (producto.imagen_url and url_for('static', filename=producto.imagen_url))
+                 or url_for('static', filename='default.jpg') }}"
+          alt="Imagen del producto"
+          width="200"
+          class="img-thumbnail">
+    </div>
+
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar Cambios</button>
+    <a href="{{ url_for('productos') }}" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Cancelar</a>
+</form>
+
+<!-- Preview simple (opcional) -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const input = document.getElementById('input-imagen');
+  const img   = document.getElementById('preview-imagen');
+  const MAX_BYTES = 2 * 1024 * 1024; // 2MB
+
+  input.addEventListener('change', function () {
+    const file = this.files && this.files[0];
+    if (!file) { img.classList.add('d-none'); img.src = ''; return; }
+
+    if (file.size > MAX_BYTES) {
+      alert('La imagen supera los 2 MB. Elige una más liviana.');
+      this.value = '';
+      img.classList.add('d-none');
+      img.src = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      img.src = e.target.result;
+      img.classList.remove('d-none');
+    };
+    reader.readAsDataURL(file);
+  });
+});
+</script>
+{% endblock %}

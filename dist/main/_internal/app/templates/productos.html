@@ -1,0 +1,55 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Catálogo de Productos</h2>
+    <a href="{{ url_for('agregar_producto') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Agregar Producto
+    </a>
+</div>
+
+<div class="row">
+    {% for producto in productos %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if producto.imagen_local %}
+                <img src="{{ url_for('static', filename='uploads/' ~ producto.imagen_local) }}" class="card-img-top" alt="{{ producto.nombre }}">
+            {% else %}
+                <img src="https://via.placeholder.com/150" class="card-img-top" alt="Sin imagen">
+            {% endif %}
+
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ producto.nombre }}</h5>
+                <p><strong>Código de Barras:</strong> {{ producto.codigo_barras }}</p>
+                
+                <!-- Mostrar QR -->
+                <img src="{{ url_for('static', filename='qr/' + producto.codigo_barras + '.png') }}" alt="QR Código" width="100">
+
+                <ul class="list-group list-group-flush mt-3">
+                    <li class="list-group-item"><strong>Precio:</strong> ${{ "{:,.0f}".format(producto.precio) }}</li>
+                    <li class="list-group-item"><strong>Stock:</strong> {{ producto.stock }} unidades</li>
+                    <li class="list-group-item"><strong>Talla:</strong> {{ producto.talla }}</li>
+                    <li class="list-group-item"><strong>Tipo:</strong> {{ producto.tipo_producto }}</li>
+                    <li class="list-group-item"><strong>Marca:</strong> {{ producto.marca }}</li>
+                    <li class="list-group-item"><strong>Género:</strong> {{ producto.genero }}</li>
+                </ul>
+            </div>
+
+            <div class="card-footer d-flex justify-content-between">
+                <a href="{{ url_for('editar_producto', id=producto.id) }}" class="btn btn-sm btn-warning" title="Editar">
+                    <i class="bi bi-pencil-fill"></i>
+                </a>
+                <a href="{{ url_for('descargar_etiqueta', id=producto.id) }}" class="btn btn-sm btn-info" title="Descargar Etiqueta">
+                    <i class="bi bi-printer-fill"></i>
+                </a>
+                <form action="{{ url_for('eliminar_producto', id=producto.id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar este producto?');">
+                    <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

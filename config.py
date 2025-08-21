@@ -9,8 +9,8 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # 🔐 Claves de registro (fallbacks si no hay variables de entorno)
-    ADMIN_REG_KEY = os.getenv('ADMIN_REG_KEY', 'cambia-esta-clave-admin')
-    VENDEDOR_REG_KEY = os.getenv('VENDEDOR_REG_KEY', 'cambia-esta-clave-vendedor')
+    ADMIN_REG_KEY = os.getenv('ADMIN_REG_KEY', 'ADMIN-123')
+    VENDEDOR_REG_KEY = os.getenv('VENDEDOR_REG_KEY', 'VEND456')
 
     # (Opcional) ajustes de uploads legacy
     SAVE_UPLOADS_TO_DISK = os.getenv('SAVE_UPLOADS_TO_DISK', 'false').lower() == 'true'
